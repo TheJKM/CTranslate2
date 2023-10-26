@@ -7,18 +7,19 @@ endif()
 
 project(ctranslate2)
 
-option(WITH_MKL "Compile with Intel MKL backend" ON)
+option(WITH_MKL "Compile with Intel MKL backend" OFF)
 option(WITH_DNNL "Compile with DNNL backend" OFF)
 option(WITH_ACCELERATE "Compile with Accelerate backend" OFF)
 option(WITH_OPENBLAS "Compile with OpenBLAS backend" OFF)
 option(WITH_RUY "Compile with Ruy backend" OFF)
 option(WITH_CUDA "Compile with CUDA backend" OFF)
+option(WITH_ROCM "Compile with ROCm backend" ON)
 option(WITH_CUDNN "Compile with cuDNN backend" OFF)
 option(CUDA_DYNAMIC_LOADING "Dynamically load CUDA libraries at runtime" OFF)
 option(ENABLE_CPU_DISPATCH "Compile CPU kernels for multiple ISA and dispatch at runtime" ON)
 option(ENABLE_PROFILING "Compile with profiling support" OFF)
 option(BUILD_CLI "Compile the clients" ON)
-option(BUILD_TESTS "Compile the tests" OFF)
+option(BUILD_TESTS "Compile the tests" ON)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 if(ENABLE_PROFILING)
@@ -521,6 +522,40 @@ if (WITH_CUDA)
     )
 elseif(WITH_CUDNN)
   message(FATAL_ERROR "WITH_CUDNN=ON requires WITH_CUDA=ON")
+else()
+  #add_library(${PROJECT_NAME} ${SOURCES})
+endif()
+
+if(WITH_ROCM)
+  find_package(hip REQUIRED)
+  enable_language(HIP)
+  set(CMAKE_HIP_ARCHITECTURES "gfx803")
+  add_library(${PROJECT_NAME}
+      ${SOURCES}
+      src/cuda/allocator.hip
+      src/cuda/primitives.hip
+      src/cuda/random.hip
+      src/cuda/utils.hip
+      src/ops/alibi_add_gpu.hip
+      src/ops/bias_add_gpu.hip
+      src/ops/concat_split_gpu.hip
+      src/ops/conv1d_gpu.hip
+      src/ops/dequantize_gpu.hip
+      src/ops/gather_gpu.hip
+      src/ops/gumbel_max_gpu.hip
+      src/ops/layer_norm_gpu.hip
+      src/ops/mean_gpu.hip
+      src/ops/multinomial_gpu.hip
+      src/ops/rms_norm_gpu.hip
+      src/ops/rotary_gpu.hip
+      src/ops/softmax_gpu.hip
+      src/ops/tile_gpu.hip
+      src/ops/topk_gpu.hip
+      src/ops/topp_mask_gpu.hip
+      src/ops/quantize_gpu.hip
+  )
+elseif(WITH_CUDNN)
+  message(FATAL_ERROR "WITH_CUDNN=ON requires WITH_ROCM=ON")
 else()
   add_library(${PROJECT_NAME} ${SOURCES})
 endif()

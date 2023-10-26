@@ -3,21 +3,21 @@
 #include <algorithm>
 #include <limits>
 
-#include <hip/hip_bf16.h>
-//#include <cuda_bf16.h>
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
 
 #include "ctranslate2/types.h"
 
 #include "utils.h"
 
-#if !defined(__HIPCC__) || !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 530
+#if !defined(__CUDACC__) || !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 530
 #  define CUDA_CAN_USE_HALF 1
 #else
 #  define CUDA_CAN_USE_HALF 0
 #endif
 
-#if defined(__HIPCC__) && (__CUDA_ARCH__ >= 800 || !defined(__CUDA_ARCH__))
-#  define CUDA_CAN_USE_BF16_MATH 0
+#if defined(__CUDACC__) && (__CUDA_ARCH__ >= 800 || !defined(__CUDA_ARCH__))
+#  define CUDA_CAN_USE_BF16_MATH 1
 #else
 #  define CUDA_CAN_USE_BF16_MATH 0
 #endif
@@ -45,7 +45,7 @@ namespace ctranslate2 {
 
     template<>
     struct DeviceType<bfloat16_t> {
-      using type = __hip_bfloat16;
+      using type = __nv_bfloat16;
     };
 
     template <typename T>
@@ -331,29 +331,29 @@ namespace ctranslate2 {
 
 #if CUDA_CAN_USE_BF16_MATH
     template<>
-    struct sin_func<__hip_bfloat16> {
-      __device__ __hip_bfloat16 operator()(__hip_bfloat16 x) const {
+    struct sin_func<__nv_bfloat16> {
+      __device__ __nv_bfloat16 operator()(__nv_bfloat16 x) const {
         return hsin(x);
       }
     };
 
     template<>
-    struct cos_func<__hip_bfloat16> {
-      __device__ __hip_bfloat16 operator()(__hip_bfloat16 x) const {
+    struct cos_func<__nv_bfloat16> {
+      __device__ __nv_bfloat16 operator()(__nv_bfloat16 x) const {
         return hcos(x);
       }
     };
 
     template<>
-    struct exp_func<__hip_bfloat16> {
-      __device__ __hip_bfloat16 operator()(__hip_bfloat16 x) const {
+    struct exp_func<__nv_bfloat16> {
+      __device__ __nv_bfloat16 operator()(__nv_bfloat16 x) const {
         return hexp(x);
       }
     };
 
     template<>
-    struct log_func<__hip_bfloat16> {
-      __device__ __hip_bfloat16 operator()(__hip_bfloat16 x) const {
+    struct log_func<__nv_bfloat16> {
+      __device__ __nv_bfloat16 operator()(__nv_bfloat16 x) const {
         return hlog(x);
       }
     };
